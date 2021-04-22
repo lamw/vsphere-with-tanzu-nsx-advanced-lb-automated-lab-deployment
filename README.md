@@ -245,10 +245,10 @@ In this example below, I will be using a two /24 VLANs (172.17.33.0/24 and 172.1
 | Hostname                  | IP Address                  | Function                                               |
 |---------------------------|-----------------------------|--------------------------------------------------------|
 | tanzu-vcsa-1.tshirts.inc  | 172.17.33.3                 | vCenter Server                                         |
-| tanzu-esxi-1.tshirts.inc  | 172.17.31.4                 | ESXi-1                                                 |
-| tanzu-esxi-2.tshirts.inc  | 172.17.31.5                 | ESXi-2                                                 |
-| tanzu-esxi-3.tshirts.inc  | 172.17.31.6                 | ESXi-3                                                 |
-| tanzu-nsx-alb.tshirts.inc | 172.17.31.9                 | NSX ALB                                                |
+| tanzu-esxi-1.tshirts.inc  | 172.17.33.4                 | ESXi-1                                                 |
+| tanzu-esxi-2.tshirts.inc  | 172.17.33.5                 | ESXi-2                                                 |
+| tanzu-esxi-3.tshirts.inc  | 172.17.33.6                 | ESXi-3                                                 |
+| tanzu-nsx-alb.tshirts.inc | 172.17.33.9                 | NSX ALB                                                |
 | N/A                       | 172.17.33.180-172.17.31.187 | Service Engine (8 IPs from Mgmt Network)               |
 | N/A                       | 172.17.33.190-172.17.31.195 | Supervisor Control Plane (5 IPs from Mgmt Network)     |
 | N/A                       | 172.17.32.152-172.17.32.159 | NSX ALB VIP/Load Balancer IP Range                     |
