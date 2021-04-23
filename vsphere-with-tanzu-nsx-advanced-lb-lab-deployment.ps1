@@ -47,7 +47,7 @@ $NSXAdvLBAdminPassword = "VMware1!"
 $NSXAdvLBvCPU = "8" #GB
 $NSXAdvLBvMEM = "24" #GB
 $NSXAdvLBPassphrase = "VMware"
-$NSXAdvLBIPAMName = "Tanzu-Defaulf-IPAM"
+$NSXAdvLBIPAMName = "Tanzu-Default-IPAM"
 
 # Service Engine Management Network Configuration
 $NSXAdvLBManagementNetwork = "172.17.33.0"
