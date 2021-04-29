@@ -252,7 +252,7 @@ In this example below, I will be using a two /24 VLANs (172.17.33.0/24 and 172.1
 | N/A                       | 172.17.33.180-172.17.33.187 | Service Engine (8 IPs from Mgmt Network)               |
 | N/A                       | 172.17.33.190-172.17.33.195 | Supervisor Control Plane (5 IPs from Mgmt Network)     |
 | N/A                       | 172.17.32.152-172.17.32.159 | NSX ALB VIP/Load Balancer IP Range                     |
-| N/A                       | 172.17.36.160-172.17.36.179 | Workload IP Range                                      |
+| N/A                       | 172.17.32.160-172.17.32.179 | Workload IP Range                                      |
 
 ### Lab Deployment Script
 
