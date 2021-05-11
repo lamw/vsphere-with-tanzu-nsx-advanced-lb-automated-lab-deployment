@@ -14,7 +14,7 @@
 
 ## Description
 
-Similar to previous "Automated Lab Deployment Scripts" (such as [here](https://www.virtuallyghetto.com/2016/11/vghetto-automated-vsphere-lab-deployment-for-vsphere-6-0u2-vsphere-6-5.html), [here](https://www.virtuallyghetto.com/2017/10/vghetto-automated-nsx-t-2-0-lab-deployment.html), [here](https://www.virtuallyghetto.com/2018/06/vghetto-automated-pivotal-container-service-pks-lab-deployment.html), [here](https://www.virtuallyghetto.com/2020/04/automated-vsphere-7-and-vsphere-with-kubernetes-lab-deployment-script.html) and [here](https://www.virtuallyghetto.com/2020/10/automated-vsphere-with-tanzu-lab-deployment-script.html)), this script makes it very easy for anyone to deploy a vSphere 7.0 Update 2 environment setup with [vSphere with Tanzu and the new NSX Advanced Load Balancer (NSX ALB)](https://core.vmware.com/blog/vsphere-tanzu-nsx-advanced-load-balancer-essentials) in a Nested Lab environment for learning and educational purposes. All required VMware components (ESXi, vCenter Server and NSX ALB VMs) are automatically deployed and configured to allow for the enablement of vSphere with Tanzu. For more details about vSphere with Tanzu, please refer to the official VMware documentation [here](https://docs.vmware.com/en/VMware-vSphere/7.0/vmware-vsphere-with-tanzu/GUID-152BE7D2-E227-4DAA-B527-557B564D9718.html).
+Similar to previous "Automated Lab Deployment Scripts" (such as [here](https://www.williamlam.com/2016/11/vghetto-automated-vsphere-lab-deployment-for-vsphere-6-0u2-vsphere-6-5.html), [here](https://www.williamlam.com/2017/10/vghetto-automated-nsx-t-2-0-lab-deployment.html), [here](https://www.williamlam.com/2018/06/vghetto-automated-pivotal-container-service-pks-lab-deployment.html), [here](https://www.williamlam.com/2020/04/automated-vsphere-7-and-vsphere-with-kubernetes-lab-deployment-script.html) and [here](https://www.williamlam.com/2020/10/automated-vsphere-with-tanzu-lab-deployment-script.html)), this script makes it very easy for anyone to deploy a vSphere 7.0 Update 2 environment setup with [vSphere with Tanzu and the new NSX Advanced Load Balancer (NSX ALB)](https://core.vmware.com/blog/vsphere-tanzu-nsx-advanced-load-balancer-essentials) in a Nested Lab environment for learning and educational purposes. All required VMware components (ESXi, vCenter Server and NSX ALB VMs) are automatically deployed and configured to allow for the enablement of vSphere with Tanzu. For more details about vSphere with Tanzu, please refer to the official VMware documentation [here](https://docs.vmware.com/en/VMware-vSphere/7.0/vmware-vsphere-with-tanzu/GUID-152BE7D2-E227-4DAA-B527-557B564D9718.html).
 
 Below is a diagram of what is deployed as part of the solution and you simply need to have an existing vSphere environment running that is managed by vCenter Server and with enough resources (CPU, Memory and Storage) to deploy this "Nested" lab. For workload management enablement (post-deployment operation), please have a look at the [Sample Execution](#sample-execution) section below.
 
@@ -29,7 +29,7 @@ You are now ready to get your K8s on! 😁
 
 ## Requirements
 * vCenter Server running at least vSphere 6.7 or later
-    * If your physical storage is vSAN, please ensure you've applied the following setting as mentioned [here](https://www.virtuallyghetto.com/2013/11/how-to-run-nested-esxi-on-top-of-vsan.html)
+    * If your physical storage is vSAN, please ensure you've applied the following setting as mentioned [here](https://www.williamlam.com/2013/11/how-to-run-nested-esxi-on-top-of-vsan.html)
 * Resource Requirements
     * Compute
         * Ability to provision VMs with up to 8 vCPU
@@ -57,7 +57,7 @@ You are now ready to get your K8s on! 😁
 
 1) Can I reduce the default CPU, Memory and Storage resources?
 
-    * You can, see this [blog post](https://www.virtuallyghetto.com/2020/04/deploying-a-minimal-vsphere-with-kubernetes-environment.html) for more details. I have not personally tested reducing CPU and Memory resources for NSX ALB, YMMV.
+    * You can, see this [blog post](https://www.williamlam.com/2020/04/deploying-a-minimal-vsphere-with-kubernetes-environment.html) for more details. I have not personally tested reducing CPU and Memory resources for NSX ALB, YMMV.
 
 3) Can I just deploy vSphere (VCSA, ESXi) and vSAN without NSX ALB and vSphere with Tanzu?
 
@@ -75,14 +75,14 @@ You are now ready to get your K8s on! 😁
 
 7) How do I troubleshoot enabling or consuming vSphere with Tanzu?
 
-    * Please refer to this [troubleshooting tips for vSphere with Kubernetes](https://www.virtuallyghetto.com/2020/05/troubleshooting-tips-for-configuring-vsphere-with-kubernetes.html) blog post
+    * Please refer to this [troubleshooting tips for vSphere with Kubernetes](https://www.williamlam.com/2020/05/troubleshooting-tips-for-configuring-vsphere-with-kubernetes.html) blog post
 
 8) Is there a way to automate the enablement of Workload Management to a vSphere Cluster?
 
-    * Yes, the [Workload Management PowerCLI Module for automating vSphere with Tanzu](https://www.virtuallyghetto.com/2020/05/workload-management-powercli-module-for-automating-vsphere-with-kubernetes.html) can be used. Please see [Enable Workload Management](#enable-workload-management) section for instructions
+    * Yes, the [Workload Management PowerCLI Module for automating vSphere with Tanzu](https://www.williamlam.com/2020/05/workload-management-powercli-module-for-automating-vsphere-with-kubernetes.html) can be used. Please see [Enable Workload Management](#enable-workload-management) section for instructions
 
 9) Can I deploy vSphere with Tanzu using NSX-T instead of NSX ALB?
-    * Yes, you will need to use the previous version of the [Automated vSphere with Kubernetes deployment script](https://www.virtuallyghetto.com/2020/04/automated-vsphere-7-and-vsphere-with-kubernetes-lab-deployment-script.html) and substituting the vSphere 7.0 Update 2 images
+    * Yes, you will need to use the previous version of the [Automated vSphere with Kubernetes deployment script](https://www.williamlam.com/2020/04/automated-vsphere-7-and-vsphere-with-kubernetes-lab-deployment-script.html) and substituting the vSphere 7.0 Update 2 images
 
 ## Configuration
 

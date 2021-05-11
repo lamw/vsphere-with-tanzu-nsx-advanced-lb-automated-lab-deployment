@@ -1,5 +1,5 @@
 # Author: William Lam
-# Website: www.virtuallyghetto.com
+# Website: www.williamlam.com
 
 # vCenter Server used to deploy vSphere with Tanzu with NSX Advanced Load Balancer Lab
 $VIServer = "FILL-ME-IN"
