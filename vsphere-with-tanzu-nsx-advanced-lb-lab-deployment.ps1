@@ -986,7 +986,7 @@ if($setupNSXAdvLB -eq 1) {
         $updateSSLCertBody = $systemConfigJsonResults | ConvertTo-Json -Depth 4
 
         try {
-            My-Logger "Updating NSX ALB to new self-sign TLS ceretificate ..."
+            My-Logger "Updating NSX ALB to new self-sign TLS certificate ..."
             $response = Invoke-WebRequest -Uri https://${NSXAdvLByManagementIPAddress}/api/systemconfiguration -body $updateSSLCertBody -Method PUT -Headers $newPassbasicAuthHeaders -SkipCertificateCheck
         } catch {
             My-Logger "Error in updating self-sign TLS certificate" "red"
