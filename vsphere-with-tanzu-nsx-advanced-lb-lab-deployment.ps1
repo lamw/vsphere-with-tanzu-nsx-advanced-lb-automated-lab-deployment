@@ -451,7 +451,7 @@ if($deployNestedESXiVMs -eq 1) {
         $ovfconfig.common.guestinfo.ssh.value = $VMSSHVar
 
         My-Logger "Deploying Nested ESXi VM $VMName ..."
-		$vm = Import-VApp -Source $NestedESXiApplianceOVA -OvfConfiguration $ovfconfig -Name $VMName -Location $cluster -VMHost $vmhost -Datastore $datastore -DiskStorageFormat thin
+        $vm = Import-VApp -Source $NestedESXiApplianceOVA -OvfConfiguration $ovfconfig -Name $VMName -Location $cluster -VMHost $vmhost -Datastore $datastore -DiskStorageFormat thin
 
         My-Logger "Adding vmnic2/vmnic3 for `"$VMNetwork`" and `"$NSXAdvLBCombinedVIPWorkloadNetwork`" to passthrough to Nested ESXi VMs ..."
         New-NetworkAdapter -VM $vm -Type Vmxnet3 -NetworkName $VMNetwork -StartConnected -confirm:$false | Out-File -Append -LiteralPath $verboseLogFile
@@ -526,11 +526,11 @@ if($deployVCSA -eq 1) {
     $config.'new_vcsa'.os.ssh_enable = $VCSASSHEnableVar
     $config.'new_vcsa'.sso.password = $VCSASSOPassword
     $config.'new_vcsa'.sso.domain_name = $VCSASSODomainName
-	
+
     if($IsWindows) {
         My-Logger "Creating VCSA JSON Configuration file for deployment ..."
         $config | ConvertTo-Json | Set-Content -Path "$($ENV:Temp)\jsontemplate.json"
-		
+
         My-Logger "Deploying the VCSA ..."
         Invoke-Expression "$($VCSAInstallerPath)\vcsa-cli-installer\win32\vcsa-deploy.exe install --no-esx-ssl-verify --accept-eula --acknowledge-ceip $($ENV:Temp)\jsontemplate.json"| Out-File -Append -LiteralPath $verboseLogFile
     } elseif($IsMacOS) {
@@ -591,7 +591,7 @@ if( $deployNestedESXiVMs -eq 1 -or $deployVCSA -eq 1 -or $deployNSXAdvLB -eq 1) 
     Disconnect-VIServer -Server $viConnection -Confirm:$false
 }
 
-if($setupNewVC -eq 1) {	
+if($setupNewVC -eq 1) {
     My-Logger "Connecting to the new VCSA ..."
     $vc = Connect-VIServer $VCSAIPAddress -User "administrator@$VCSASSODomainName" -Password $VCSASSOPassword -WarningAction SilentlyContinue
 
@@ -679,7 +679,7 @@ if($setupNewVC -eq 1) {
             $vds | Add-VDSwitchPhysicalNetworkAdapter -VMHostNetworkAdapter $vmhostNetworkAdapter -Confirm:$false
         }
     }
-	
+
     if($clearVSANHealthCheckAlarm -eq 1) {
         My-Logger "Clearing default VSAN Health Check Alarms, not applicable in Nested ESXi env ..."
         $alarmMgr = Get-View AlarmManager -Server $vc
@@ -688,7 +688,7 @@ if($setupNewVC -eq 1) {
             $Cluster.ExtensionData.TriggeredAlarmState | %{
                 $alarmMgr.AcknowledgeAlarm($_.Alarm,$cluster.ExtensionData.MoRef)
             }
-		}
+        }
         $alarmSpec = New-Object VMware.Vim.AlarmFilterSpec
         $alarmMgr.ClearTriggeredAlarms($alarmSpec)
     }
@@ -704,7 +704,7 @@ if($setupNewVC -eq 1) {
         if($vmhost.ConnectionState -eq "Maintenance") {
             Set-VMHost -VMhost $vmhost -State Connected -RunAsync -Confirm:$false | Out-File -Append -LiteralPath $verboseLogFile
         }
-	}
+    }
 
     if($setupTanzuStoragePolicy -eq 1) {
         #$datastoreName = $vsanDatastoreName
@@ -1287,7 +1287,7 @@ if($setupNSXAdvLB -eq 1) {
             break
         }
     }
-	
+    
     if($createDefaultIPAM -eq 1) {
         $cloudNetworkResult = ((Invoke-WebRequest -Uri https://${NSXAdvLByManagementIPAddress}/api/network -Method GET -Headers $newPassbasicAuthHeaders -SkipCertificateCheck).Content | ConvertFrom-Json).results | where {$_.name -eq $NewVCWorkloadPortgroupName}
 
