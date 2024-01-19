@@ -6,10 +6,10 @@ $VIServer = "FILL-ME-IN"
 $VIUsername = "FILL-ME-IN"
 $VIPassword = "FILL-ME-IN"
 
-# Full Path to both the Nested ESXi 7.0 VA, Extracted VCSA 7.0 ISO & NSX Advanced 20.1.4 OVA
-$NestedESXiApplianceOVA = "C:\Users\william\Desktop\tanzu\Nested_ESXi7.0u2_Appliance_Template_v1.ova"
-$VCSAInstallerPath = "C:\Users\william\Desktop\tanzu\VMware-VCSA-all-7.0.2-17694817"
-$NSXAdvLBOVA = "C:\Users\william\Desktop\tanzu\controller-20.1.4-9087.ova"
+# Full Path to both the Nested ESXi 8.0u2 VA, Extracted VCSA 8.0.2 ISO & NSX Advanced 30.1.1 OVA
+$NestedESXiApplianceOVA = "D:\Instalaciones\VMware\LAB\Nested ESXi\Nested_ESXi8.0u2_Appliance_Template_v1.ova"
+$VCSAInstallerPath = "D:\Instalaciones\VMware\8.0U2a\VMware-VCSA-all-8.0.2-22617221"
+$NSXAdvLBOVA = "D:\Instalaciones\VMware\Tanzu\AVI NSX Advanced Load Balancer\30.1.1\controller-30.1.1-9415.ova"
 
 # TKG Content Library URL
 $TKGContentLibraryName = "TKG-Content-Library"
@@ -39,6 +39,19 @@ $VCSASSOPassword = "VMware1!"
 $VCSARootPassword = "VMware1!"
 $VCSASSHEnable = "true"
 
+####################
+# Need Proxy for your PowerShell Environment and for VCSA (asumed it's the same)
+$NeedProxy = "true"
+$ProxyIpOrName = "yourproxy.tshirts.inc"
+$ProxyPort = "8080"
+$ProxyUser = ""
+$ProxyPass = ""
+$NoProxy = @(
+    ".tshirts.inc"
+    "172.17.0.0/16"
+)
+####################
+
 # NSX Advanced LB Configuration
 $NSXAdvLBDisplayName = "tanzu-nsx-alb"
 $NSXAdvLByManagementIPAddress = "172.17.33.9"
@@ -46,7 +59,7 @@ $NSXAdvLBHostname = "tanzu-nsx-alb.tshirts.inc"
 $NSXAdvLBAdminPassword = "VMware1!"
 $NSXAdvLBvCPU = "8" #GB
 $NSXAdvLBvMEM = "24" #GB
-$NSXAdvLBPassphrase = "VMware"
+$NSXAdvLBPassphrase = "VMware1!" #New Policy in NSX ALB
 $NSXAdvLBIPAMName = "Tanzu-Default-IPAM"
 
 # Service Engine Management Network Configuration
@@ -95,6 +108,9 @@ $NewVCVSANClusterName = "Workload-Cluster"
 $NewVCVDSName = "Tanzu-VDS"
 $NewVCMgmtPortgroupName = "DVPG-Supervisor-Management-Network"
 $NewVCWorkloadPortgroupName = "DVPG-Workload-Network"
+
+#VSAN datastore Name
+$vsanDatastoreName = "vsanDataStore"
 
 # Tanzu Configuration
 $StoragePolicyName = "tanzu-gold-storage-policy"
@@ -206,6 +222,12 @@ namespace CertificateCapture
     $Certs = [CertificateCapture.Utility]::CapturedCertificates
 
     $Handler = [System.Net.Http.HttpClientHandler]::new()
+	if ($NeedProxy -eq "true") {  
+	    $Handler.UseProxy = $true 
+		$proxyObject = New-Object System.Net.WebProxy("http://${ProxyIpOrName}:${ProxyPort}")
+	    $Handler.Proxy = $proxyObject
+		#Use Credentials not implemented yet
+	}
     $Handler.ServerCertificateCustomValidationCallback = [CertificateCapture.Utility]::ValidationCallback
     $Client = [System.Net.Http.HttpClient]::new($Handler)
     $Result = $Client.GetAsync($Url).Result
@@ -229,6 +251,14 @@ Function My-Logger {
     Write-Host -ForegroundColor $color " $message"
     $logMessage = "[$timeStamp] $message"
     $logMessage | Out-File -Append -LiteralPath $verboseLogFile
+}
+
+if ($global:DefaultVIServers) { # Are we connected to some vCenters previously?
+    Write-Host -ForegroundColor Red "`nWe are previously connected to one or more vCenters. Disconnecting of all of them`n"
+	Write-host $global:DefaultVIServers
+    Disconnect-VIServer -Server * -Force -Confirm:$False
+	Start-Sleep -Seconds 3
+	Clear-Host
 }
 
 if($preCheck -eq 1) {
@@ -420,7 +450,7 @@ if($deployNestedESXiVMs -eq 1) {
         $ovfconfig.common.guestinfo.ssh.value = $VMSSHVar
 
         My-Logger "Deploying Nested ESXi VM $VMName ..."
-        $vm = Import-VApp -Source $NestedESXiApplianceOVA -OvfConfiguration $ovfconfig -Name $VMName -Location $cluster -VMHost $vmhost -Datastore $datastore -DiskStorageFormat thin
+		$vm = Import-VApp -Source $NestedESXiApplianceOVA -OvfConfiguration $ovfconfig -Name $VMName -Location $cluster -VMHost $vmhost -Datastore $datastore -DiskStorageFormat thin
 
         My-Logger "Adding vmnic2/vmnic3 for `"$VMNetwork`" and `"$NSXAdvLBCombinedVIPWorkloadNetwork`" to passthrough to Nested ESXi VMs ..."
         New-NetworkAdapter -VM $vm -Type Vmxnet3 -NetworkName $VMNetwork -StartConnected -confirm:$false | Out-File -Append -LiteralPath $verboseLogFile
@@ -452,7 +482,7 @@ if($deployNSXAdvLB -eq 1) {
     $ovfconfig.avi.CONTROLLER.default_gw.value = $VMGateway
 
     My-Logger "Deploying NSX Advanced LB VM $NSXAdvLBDisplayName ..."
-    $vm = Import-VApp -Source $NSXAdvLBOVA -OvfConfiguration $ovfconfig -Name $NSXAdvLBDisplayName -Location $cluster -VMHost $vmhost -Datastore $datastore -DiskStorageFormat thin
+    $vm = Import-VApp -Source $NSXAdvLBOVA -OvfConfiguration $ovfconfig -Name $NSXAdvLBDisplayName -Location $cluster -VMHost $vmhost -Datastore $datastore -DiskStorageFormat thin -Force
 
     My-Logger "Updating vCPU Count to $NSXAdvLBvCPU & vMEM to $NSXAdvLBvMEM GB ..."
     Set-VM -Server $viConnection -VM $vm -NumCpu $NSXAdvLBvCPU -MemoryGB $NSXAdvLBvMEM -Confirm:$false | Out-File -Append -LiteralPath $verboseLogFile
@@ -495,11 +525,11 @@ if($deployVCSA -eq 1) {
     $config.'new_vcsa'.os.ssh_enable = $VCSASSHEnableVar
     $config.'new_vcsa'.sso.password = $VCSASSOPassword
     $config.'new_vcsa'.sso.domain_name = $VCSASSODomainName
-
+	
     if($IsWindows) {
         My-Logger "Creating VCSA JSON Configuration file for deployment ..."
         $config | ConvertTo-Json | Set-Content -Path "$($ENV:Temp)\jsontemplate.json"
-
+		
         My-Logger "Deploying the VCSA ..."
         Invoke-Expression "$($VCSAInstallerPath)\vcsa-cli-installer\win32\vcsa-deploy.exe install --no-esx-ssl-verify --accept-eula --acknowledge-ceip $($ENV:Temp)\jsontemplate.json"| Out-File -Append -LiteralPath $verboseLogFile
     } elseif($IsMacOS) {
@@ -560,7 +590,7 @@ if( $deployNestedESXiVMs -eq 1 -or $deployVCSA -eq 1 -or $deployNSXAdvLB -eq 1) 
     Disconnect-VIServer -Server $viConnection -Confirm:$false
 }
 
-if($setupNewVC -eq 1) {
+if($setupNewVC -eq 1) {	
     My-Logger "Connecting to the new VCSA ..."
     $vc = Connect-VIServer $VCSAIPAddress -User "administrator@$VCSASSODomainName" -Password $VCSASSOPassword -WarningAction SilentlyContinue
 
@@ -585,9 +615,9 @@ if($setupNewVC -eq 1) {
 
             $targetVMHost = $VMIPAddress
             if($addHostByDnsName -eq 1) {
-                $targetVMHost = $VMName
+                $targetVMHost = $VMName + "." + $VMDomain
             }
-            My-Logger "Adding ESXi host $targetVMHost to Cluster ..."
+            My-Logger "Adding ESXi host $targetVMHost to Cluster $NewVCVSANClusterName ..."
             Add-VMHost -Server $vc -Location (Get-Cluster -Name $NewVCVSANClusterName) -User "root" -Password $VMPassword -Name $targetVMHost -Force | Out-File -Append -LiteralPath $verboseLogFile
         }
 
@@ -648,16 +678,16 @@ if($setupNewVC -eq 1) {
             $vds | Add-VDSwitchPhysicalNetworkAdapter -VMHostNetworkAdapter $vmhostNetworkAdapter -Confirm:$false
         }
     }
-
+	
     if($clearVSANHealthCheckAlarm -eq 1) {
         My-Logger "Clearing default VSAN Health Check Alarms, not applicable in Nested ESXi env ..."
         $alarmMgr = Get-View AlarmManager -Server $vc
-        Get-Cluster -Server $vc | where {$_.ExtensionData.TriggeredAlarmState} | %{
+        Get-Cluster -Server $vc -Name $NewVCVSANClusterName | where {$_.ExtensionData.TriggeredAlarmState} | %{
             $cluster = $_
             $Cluster.ExtensionData.TriggeredAlarmState | %{
                 $alarmMgr.AcknowledgeAlarm($_.Alarm,$cluster.ExtensionData.MoRef)
             }
-        }
+		}
         $alarmSpec = New-Object VMware.Vim.AlarmFilterSpec
         $alarmMgr.ClearTriggeredAlarms($alarmSpec)
     }
@@ -673,10 +703,10 @@ if($setupNewVC -eq 1) {
         if($vmhost.ConnectionState -eq "Maintenance") {
             Set-VMHost -VMhost $vmhost -State Connected -RunAsync -Confirm:$false | Out-File -Append -LiteralPath $verboseLogFile
         }
-    }
+	}
 
-    if($setupTanzuStoragePolicy) {
-        $datastoreName = "vsanDatastore"
+    if($setupTanzuStoragePolicy -eq 1) {
+        #$datastoreName = $vsanDatastoreName
 
         My-Logger "Creating Tanzu Storage Policies and attaching to $datastoreName ..."
         New-TagCategory -Server $vc -Name $StoragePolicyTagCategory -Cardinality single -EntityType Datastore | Out-File -Append -LiteralPath $verboseLogFile
@@ -684,6 +714,46 @@ if($setupNewVC -eq 1) {
         Get-Datastore -Server $vc -Name $datastoreName | New-TagAssignment -Server $vc -Tag $StoragePolicyTagName | Out-File -Append -LiteralPath $verboseLogFile
         New-SpbmStoragePolicy -Server $vc -Name $StoragePolicyName -AnyOfRuleSets (New-SpbmRuleSet -Name "tanzu-ruleset" -AllOfRules (New-SpbmRule -AnyOfTags (Get-Tag $StoragePolicyTagName))) | Out-File -Append -LiteralPath $verboseLogFile
     }
+	
+	if ($NeedProxy -eq "true") { 
+
+		My-Logger "Connecting to the new VCSA CIS API ..."
+		Connect-CisServer -Server $VCSAIPAddress -User "administrator@$VCSASSODomainName" -Password $VCSASSOPassword -WarningAction SilentlyContinue | Out-File -Append -LiteralPath $verboseLogFile
+
+		My-Logger "Configuring Proxy into new VCSA ..."
+
+		$proxy = Get-CisService -Name 'com.vmware.appliance.networking.proxy'
+		#$proxy.get('http')      # For debugging purposes
+		$config = $proxy.Help.set.config.Create()
+		$config.enabled = $true
+		$config.server = "http://$ProxyIpOrName"
+		$config.port = "$ProxyPort"
+		$config.username = "$ProxyUser"
+		[VMware.VimAutomation.Cis.Core.Types.V1.Secret]$config.password = "$ProxyPass"
+		$proxy.set('http',$config)
+
+		#$proxy.get('https')      # For debugging purposes
+		#$config = $proxy.Help.set.config.Create()
+		#$config.enabled = $true
+		#$config.server = "http://$ProxyIpOrName"
+		#$config.port = "$ProxyPort"
+		#$config.username = "$ProxyUser"
+		#[VMware.VimAutomation.Cis.Core.Types.V1.Secret]$config.password = "$ProxyPass"
+		$proxy.set('https',$config)
+
+		$no_proxy = Get-CisService -Name 'com.vmware.appliance.networking.no_proxy'
+		$servers = $no_proxy.Help.set.servers.create()
+		$servers.Add("127.0.0.1") | Out-Null
+		$servers.Add("localhost") | Out-Null
+		foreach ($item in $NoProxy) {
+			$servers.Add("$item") | Out-Null
+		}
+		$no_proxy.set($servers)
+		#$no_proxy.get()         # For debugging purposes
+
+		My-Logger "Disconnecting to the new VCSA CIS API ..."
+		Disconnect-CisServer -Server $VCSAIPAddress -Force -Confirm:$false
+    }	
 
     My-Logger "Disconnecting from new VCSA ..."
     Disconnect-VIServer $vc -Confirm:$false
@@ -708,7 +778,7 @@ if($setupTanzu -eq 1) {
     $clPort = ([System.Uri]$TKGContentLibraryURL).port
     $clThumbprint = Get-SSLThumbprint -Url "${clScheme}://${clHost}:${clPort}"
 
-    New-ContentLibrary -Server $vc -Name $TKGContentLibraryName -Description "Subscribed TKG Content Library" -Datastore (Get-Datastore -Server $vc "vsanDatastore") -AutomaticSync -SubscriptionUrl $TKGContentLibraryURL -SslThumbprint $clThumbprint | Out-File -Append -LiteralPath $verboseLogFile
+    New-ContentLibrary -Server $vc -Name $TKGContentLibraryName -Description "Subscribed TKG Content Library" -Datastore (Get-Datastore -Server $vc $vsanDatastoreName) -AutomaticSync -DownloadContentOnDemand -SubscriptionUrl $TKGContentLibraryURL -SslThumbprint $clThumbprint | Out-File -Append -LiteralPath $verboseLogFile
 
     Disconnect-VIServer $vc -Confirm:$false | Out-Null
 }
@@ -737,7 +807,7 @@ if($setupNSXAdvLB -eq 1) {
         "Authorization"="basic $base64";
         "Content-Type"="application/json";
         "Accept"="application/json";
-        "x-avi-version"="20.1.4";
+        "x-avi-version"="30.1.1";
     }
 
     $enableBasicAuth=1
@@ -752,6 +822,8 @@ if($setupNSXAdvLB -eq 1) {
     $updateVCWorkloadNetwork=1
     $createDefaultIPAM=1
     $updateDefaultIPAM=1
+	$ChangeToEssentialsLicenseTier=1
+	$AddDefaultRoute=1
 
     if($enableBasicAuth -eq 1) {
         $headers = @{
@@ -772,7 +844,7 @@ if($setupNSXAdvLB -eq 1) {
         $headers = @{
             "Content-Type"="application/json"
             "Accept"="application/json"
-            "x-avi-version"="20.1.4"
+            "x-avi-version"="30.1.1"
             "x-csrftoken"=$csrfToken
             "referer"="https://${NSXAdvLByManagementIPAddress}/login"
         }
@@ -1021,6 +1093,7 @@ if($setupNSXAdvLB -eq 1) {
                 };
                 "mask" = "$NSXAdvLBManagementNetworkPrefix";
             }
+			"use_content_lib" = "false";
         }
 
         $cloudConfigResult | Add-Member -MemberType NoteProperty -Name vcenter_configuration -Value $vcConfig
@@ -1213,7 +1286,7 @@ if($setupNSXAdvLB -eq 1) {
             break
         }
     }
-
+	
     if($createDefaultIPAM -eq 1) {
         $cloudNetworkResult = ((Invoke-WebRequest -Uri https://${NSXAdvLByManagementIPAddress}/api/network -Method GET -Headers $newPassbasicAuthHeaders -SkipCertificateCheck).Content | ConvertFrom-Json).results | where {$_.name -eq $NewVCWorkloadPortgroupName}
 
@@ -1275,6 +1348,84 @@ if($setupNSXAdvLB -eq 1) {
         } else {
             My-Logger "Something went wrong updating default IPAM profile" "yellow"
             $response
+            break
+        }
+    }
+	
+	if($ChangeToEssentialsLicenseTier -eq 1) {
+        $LicenseResults = (Invoke-WebRequest -Uri https://${NSXAdvLByManagementIPAddress}/api/systemconfiguration -Method GET -Headers $newPassbasicAuthHeaders -SkipCertificateCheck).Content | ConvertFrom-Json
+
+        $LicenseResults.default_license_tier = "ESSENTIALS"
+
+        $newLicenseJsonBody = ($LicenseResults | ConvertTo-json -Depth 7)
+
+        try {
+            My-Logger "Configuring Licensing to Essentials License Tier"
+            $response = Invoke-WebRequest -Uri https://${NSXAdvLByManagementIPAddress}/api/systemconfiguration -body $newLicenseJsonBody -Method PUT -Headers $newPassbasicAuthHeaders -SkipCertificateCheck
+        } catch {
+            My-Logger "Failed to configure Licensing to Essentials License Tier" "red"
+            Write-Error "`n($_.Exception.Message)`n"
+            break
+        }
+
+        if($response.Statuscode -eq 200) {
+            My-Logger "Successfully updated Licensing to Essentials License Tier ..."
+        } else {
+            My-Logger "Something went wrong with configure Licensing to Essentials License Tier" "yellow"
+            $response
+            break
+        }
+    }
+	
+    if($AddDefaultRoute -eq 1) {
+        $NetworkResults = (Invoke-WebRequest -Uri https://${NSXAdvLByManagementIPAddress}/api/network -Method GET -Headers $newPassbasicAuthHeaders -SkipCertificateCheck).Content | ConvertFrom-Json
+		
+	    $VRFContextGlobal = $NetworkResults.results[0].vrf_context_ref
+		
+		$VRFContextResults = (Invoke-WebRequest -Uri $VRFContextGlobal -Method GET -Headers $newPassbasicAuthHeaders -SkipCertificateCheck).Content | ConvertFrom-Json
+		
+		#write-host ($VRFContextResults | ConvertTo-Json -Depth 7)
+		
+		if($VRFContextResults.name -eq "global") {
+		    
+            $DefaultRouteGlobal = @{
+                "next_hop" = @{
+				    "addr" = "$WorkloadNetworkGatewayHERR"
+				    "type" = "V4"
+			    }
+                "prefix" = @{
+			        "ip_addr" = @{
+				      "addr" = "0.0.0.0"
+				      "type" = "V4"
+			        }
+				    "mask" = 0
+			    }
+			    "route_id" = "1"
+            }
+			
+			$VRFContextResults | Add-Member -MemberType NoteProperty -Name static_routes -Value @($DefaultRouteGlobal)
+			
+			$NewVRFContextResults = ($VRFContextResults | ConvertTo-json -Depth 7)
+		
+            try {
+                My-Logger "Configuring Default Route for NSX ALB"
+                $response = Invoke-WebRequest -Uri $VRFContextGlobal -body $NewVRFContextResults -Method PUT -Headers $newPassbasicAuthHeaders -SkipCertificateCheck
+            } catch {
+                My-Logger "Failed to configure Default Route for NSX ALB" "red"
+                Write-Error "`n($_.Exception.Message)`n"
+                break
+            }
+
+            if($response.Statuscode -eq 200) {
+                My-Logger "Successfully configured Default Route for NSX ALB ..."
+            } else {
+                My-Logger "Something went wrong with configure Default Route for NSX ALB" "yellow"
+                $response
+                break
+            }
+		} else {
+            My-Logger "VRF Context is not the correct one: 'global'" "yellow"
+            Write-Error "`nVRF Context is not the correct one: 'global'`n"
             break
         }
     }
