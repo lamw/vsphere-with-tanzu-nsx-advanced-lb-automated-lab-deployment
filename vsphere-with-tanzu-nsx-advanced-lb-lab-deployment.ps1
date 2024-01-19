@@ -74,6 +74,7 @@ $NSXAdvLBWorkloadNetwork = "172.17.32.128"
 $NSXAdvLBWorkloadNetworkPrefix = "26"
 $NSXAdvLBWorkloadNetworkStartRange = "172.17.32.152"
 $NSXAdvLBWorkloadNetworkEndRange = "172.17.32.159"
+$NSXAvdLBWorkloadNetworkGateway = "172.27.32.1"
 
 # Self-Sign TLS Certificate
 $NSXAdvLBSSLCertName = "nsx-alb"
@@ -1390,7 +1391,7 @@ if($setupNSXAdvLB -eq 1) {
 		    
             $DefaultRouteGlobal = @{
                 "next_hop" = @{
-				    "addr" = "$WorkloadNetworkGatewayHERR"
+				    "addr" = "$NSXAvdLBWorkloadNetworkGateway"
 				    "type" = "V4"
 			    }
                 "prefix" = @{
