@@ -54,7 +54,7 @@ You are now ready to get your K8s on! 😁
 * vSphere 7 Update 2 & NSX ALB OVAs:
     * [vCenter Server Appliance 7.0 Update 2 Build 17694817](https://my.vmware.com/web/vmware/downloads/details?downloadGroup=VC70U2&productId=974&rPId=61844)
     * [NSX ALB 20.1.4-9087 OVA](https://my.vmware.com/web/vmware/downloads/details?downloadGroup=NSX-ALB-10&productId=1092&rPId=55618)
-    * [Nested ESXi 7.0 Update 2 OVA](https://download3.vmware.com/software/vmw-tools/nested-esxi/Nested_ESXi7.0u2_Appliance_Template_v1.ova)
+    * [Nested ESXi 7.0 Update 2 OVA](https://community.broadcom.com/flings)
 
 ## FAQ
 
